@@ -67,8 +67,7 @@ def add_transaction(date, type, category, amount, description):
 
 def get_all_transactions():
     """Retrieves all transactions from the database and returns a DataFrame."""
-    df = conn.query("SELECT date, type, category, amount, description FROM transactions ORDER BY date DESC", ttl=0)
-    df['date'] = pd.to_datetime(df['date'])
+    df = conn.query("SELECT date, type, category, amount, description FROM transactions ORDER BY date DESC")
     return df
 
 # --- Main App ---
@@ -99,52 +98,53 @@ with st.sidebar:
 # --- Data Retrieval and Summary ---
 transactions_df = get_all_transactions()
 
-
-
-total_income = transactions_df[transactions_df["type"] == "Income"]["amount"].sum()
-total_expenses = transactions_df[transactions_df["type"] == "Expense"]["amount"].sum()
-net_savings = total_income - total_expenses
-
-st.header("Budget Summary")
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Income", f"${total_income:,.2f}")
-col2.metric("Total Expenses", f"${total_expenses:,.2f}")
-col3.metric("Net Savings", f"${net_savings:,.2f}", delta=f"{net_savings:,.2f}")
-
-# --- Data Visualization ---
-st.header("Visualizations")
-
-# Expense Category Breakdown
-expenses_df = transactions_df[transactions_df["type"] == "Expense"]
-if not expenses_df.empty:
-    fig_pie = px.pie(
-        expenses_df,
-        names="category",
-        values="amount",
-        title="Expense Category Breakdown",
-        hole=0.3,
-    )
-    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-
-    # Spending Over Time
-    expenses_by_day = expenses_df.groupby(expenses_df['date'].dt.date)['amount'].sum().reset_index()
-    fig_bar = px.bar(
-        expenses_by_day,
-        x="date",
-        y="amount",
-        title="Daily Expenses",
-        labels={"date": "Date", "amount": "Total Expense"},
-    )
-    fig_bar.update_layout(xaxis_title="Date", yaxis_title="Amount ($)")
-    
-    viz_col1, viz_col2 = st.columns(2)
-    with viz_col1:
-        st.plotly_chart(fig_pie, use_container_width=True)
-    with viz_col2:
-        st.plotly_chart(fig_bar, use_container_width=True)
+if transactions_df.empty:
+    st.info("No transactions yet. Add one using the form on the left.")
 else:
-    st.info("No expenses recorded to visualize.")
+    total_income = transactions_df[transactions_df["type"] == "Income"]["amount"].sum()
+    total_expenses = transactions_df[transactions_df["type"] == "Expense"]["amount"].sum()
+    net_savings = total_income - total_expenses
 
-# --- Data Display ---
-st.header("Full Transaction History")
-st.dataframe(transactions_df, use_container_width=True)
+    st.header("Budget Summary")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Income", f"${total_income:,.2f}")
+    col2.metric("Total Expenses", f"${total_expenses:,.2f}")
+    col3.metric("Net Savings", f"${net_savings:,.2f}", delta=f"{net_savings:,.2f}")
+
+    # --- Data Visualization ---
+    st.header("Visualizations")
+    
+    # Expense Category Breakdown
+    expenses_df = transactions_df[transactions_df["type"] == "Expense"]
+    if not expenses_df.empty:
+        fig_pie = px.pie(
+            expenses_df,
+            names="category",
+            values="amount",
+            title="Expense Category Breakdown",
+            hole=0.3,
+        )
+        fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+
+        # Spending Over Time
+        expenses_by_day = expenses_df.groupby(expenses_df['date'].dt.date)['amount'].sum().reset_index()
+        fig_bar = px.bar(
+            expenses_by_day,
+            x="date",
+            y="amount",
+            title="Daily Expenses",
+            labels={"date": "Date", "amount": "Total Expense"},
+        )
+        fig_bar.update_layout(xaxis_title="Date", yaxis_title="Amount ($)")
+        
+        viz_col1, viz_col2 = st.columns(2)
+        with viz_col1:
+            st.plotly_chart(fig_pie, use_container_width=True)
+        with viz_col2:
+            st.plotly_chart(fig_bar, use_container_width=True)
+    else:
+        st.info("No expenses recorded to visualize.")
+
+    # --- Data Display ---
+    st.header("Full Transaction History")
+    st.dataframe(transactions_df, use_container_width=True)
