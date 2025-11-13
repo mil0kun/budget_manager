@@ -141,12 +141,12 @@ else:
         
         viz_col1, viz_col2 = st.columns(2)
         with viz_col1:
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
         with viz_col2:
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, width='stretch')
     else:
         st.info("No expenses recorded to visualize.")
 
     # --- Data Display ---
     st.header("Full Transaction History")
-    st.dataframe(transactions_df, use_container_width=True)
+    st.dataframe(transactions_df, width='stretch')
