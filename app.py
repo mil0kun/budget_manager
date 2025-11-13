@@ -64,10 +64,12 @@ def add_transaction(date, type, category, amount, description):
             ),
         )
         s.commit()
-
+    st.cache_data.clear()
+@st.cache_data
 def get_all_transactions():
     """Retrieves all transactions from the database and returns a DataFrame."""
-    df = conn.query("SELECT date, type, category, amount, description FROM transactions ORDER BY date DESC")
+    df = conn.query("SELECT date, type, category, amount, description FROM transactions ORDER BY date DESC", ttl=0)
+    df['date'] = pd.to_datetime(df['date'])
     return df
 
 # --- Main App ---
@@ -77,17 +79,17 @@ st.markdown("Track your income and expenses with ease.")
 # --- Input Form ---
 with st.sidebar:
     st.header("Add a New Transaction")
+    type_input = st.selectbox("Type", ["Income", "Expense"],placeholder="Please select a type")
     with st.form("transaction_form", clear_on_submit=True):
         date_input = st.date_input("Date", value=datetime.date.today())
-        type_input = st.selectbox("Type", ["Income", "Expense"])
         
         if type_input == "Income":
-            categories = ["Salary", "Investment", "Gift", "Other"]
+            categories = ["Salary", "Gift","Part-Time","Bonus investment", "Other"]
         else:
-            categories = ["Groceries", "Rent", "Utilities", "Entertainment", "Transport", "Other"]
+            categories = ["Food", "Investment", "Utilities", "Entertainment", "Transport", "shopping","Other"]
         
         category_input = st.selectbox("Category", categories)
-        amount_input = st.number_input("Amount", min_value=0.01, format="%.2f")
+        amount_input = st.number_input("Amount", min_value=0.01, format="%.2f" ,)
         description_input = st.text_area("Description (Optional)")
         
         submitted = st.form_submit_button("Add Transaction")
@@ -122,7 +124,7 @@ else:
             names="category",
             values="amount",
             title="Expense Category Breakdown",
-            hole=0.3,
+            hole=0.5,
         )
         fig_pie.update_traces(textposition='inside', textinfo='percent+label')
 
