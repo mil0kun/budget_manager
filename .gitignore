@@ -1,0 +1,12 @@
+setup gitignore
+# Ignore node modules
+node_modules/   
+# Ignore log files
+*.log      
+# Ignore environment files
+*.toml
+.env
+# Ignore build directories  
+dist/
+build/  
+
